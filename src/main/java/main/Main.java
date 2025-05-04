@@ -1,5 +1,6 @@
 package main;
 
+import database.DatabaseConnector;
 import gui.MainView;
 
 public class Main {
