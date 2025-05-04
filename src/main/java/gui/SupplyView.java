@@ -1,34 +1,34 @@
 package gui;
 
-import database.Controller;
+import main.Controller;
 
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Vector;
 
-public class SupplyView extends View{
-    private JTable supplyTable;
-
+public class SupplyView extends View implements ViewInterface{
     public SupplyView(MainView mainFrame, CardLayout cardLayout, JPanel cardPanel) {
         super(mainFrame, cardLayout, cardPanel);
-        setTitle("Управление поставками");
+
+        columnNames.add("ID");
+        columnNames.add("Дата");
+        columnNames.add("Поставщик");
     }
 
+    @Override
     public void createPanel() {
-        String title = "Управление поставками";
-
-        JPanel panel = super.createPanel(title);
-        JPanel mainContentPanel = new JPanel(new BorderLayout());
-
-        supplyTable = new JTable();
+        createPanel("Управление поставками", createButtonPanel(), "SupplyManagement");
         refreshTable();
-        JScrollPane scrollPane = new JScrollPane(supplyTable);
-        mainContentPanel.add(scrollPane, BorderLayout.CENTER);
+    }
 
+    @Override
+    public JPanel createButtonPanel() {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
 
         JButton addSupplyButton = new JButton("Добавить поставку");
@@ -46,31 +46,16 @@ public class SupplyView extends View{
         JButton backButton = new JButton("Назад");
         backButton.addActionListener(e -> cardLayout.show(cardPanel, "MainMenu"));
         buttonPanel.add(backButton);
-
-        mainContentPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        panel.add(mainContentPanel, BorderLayout.CENTER);
-
-        cardPanel.add(panel, "SupplyManagement");
+        return buttonPanel;
     }
 
+    @Override
     public void refreshTable() {
         try {
-            Vector<String> columnNames = new Vector<>();
-            columnNames.add("ID");
-            columnNames.add("Дата");
-            columnNames.add("Поставщик");
-
             Vector<Vector<Object>> data = controller.getAllSupplies();
-            supplyTable.setModel(new javax.swing.table.DefaultTableModel(data, columnNames) {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            });
+            refreshTable(data, columnNames, table);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(mainFrame, "Ошибка при загрузке данных: " + e.getMessage(),
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            messageError(mainFrame, "Ошибка при загрузке данных: " + e.getMessage());
         }
     }
 
@@ -90,7 +75,7 @@ public class SupplyView extends View{
         JTextField supplierField = new JTextField();
         panel.add(supplierField);
 
-        JButton addButton = getjButton(dateField, supplierField, dialog, controller);
+        JButton addButton = addButton(dateField, supplierField, dialog, controller);
 
         JButton cancelButton = new JButton("Отмена");
         cancelButton.addActionListener(e -> dialog.dispose());
@@ -104,43 +89,33 @@ public class SupplyView extends View{
         dialog.setVisible(true);
     }
 
-    private JButton getjButton(JTextField dateField, JTextField supplierField, JDialog dialog, Controller controller) {
+    private JButton addButton(JTextField dateField, JTextField supplierField, JDialog dialog, Controller controller) {
         JButton addButton = new JButton("Добавить");
         addButton.addActionListener(e -> {
             String dateStr = dateField.getText();
             String supplier = supplierField.getText();
             try {
                 controller.createSupply(dateStr, supplier);
-                JOptionPane.showMessageDialog(dialog, "Новая поставка успешно добавлена",
-                        "Успех", JOptionPane.INFORMATION_MESSAGE);
+                messageSuccess(dialog, "Новая поставка успешно добавлена");
                 refreshTable();
                 dialog.dispose();
 
             } catch (IllegalArgumentException | ParseException ex) {
-                JOptionPane.showMessageDialog(dialog, "Пожалуйста, введите дату в формате ГГГГ-ММ-ДД.",
-                        "Ошибка", JOptionPane.ERROR_MESSAGE);
+                messageError(dialog, "Пожалуйста, введите дату в формате ГГГГ-ММ-ДД.");
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Ошибка при добавлении поставки: " + ex.getMessage(),
-                        "Ошибка", JOptionPane.ERROR_MESSAGE);
+                messageError(dialog, "Ошибка при добавлении поставки: " + ex.getMessage());
             }
         });
         return addButton;
     }
 
     public void showSupplyComponentsDialog() {
-        int selectedRow = supplyTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(mainFrame, "Пожалуйста, выберите поставку.",
-                    "Ошибка", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int supplyId = (Integer) supplyTable.getValueAt(selectedRow, 0);
+        int supplyId = super.selectRow(table);
+        if (supplyId == -1) return;
 
         JDialog dialog = new JDialog(mainFrame, "Компоненты поставки #" + supplyId, true);
         dialog.setSize(600, 400);
         dialog.setLocationRelativeTo(mainFrame);
-
         try {
             Vector<String> columnNames = new Vector<>();
 
@@ -150,44 +125,17 @@ public class SupplyView extends View{
             columnNames.add("Количество");
 
             Vector<Vector<Object>> data = controller.getComponentsSupply(supplyId);
-            if (data.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "В этой поставке нет компонентов.",
-                        "Информация", JOptionPane.INFORMATION_MESSAGE);
-                dialog.dispose();
-                return;
-            }
-
-            JTable componentsTable = new JTable(data, columnNames);
-            JScrollPane scrollPane = new JScrollPane(componentsTable);
-            dialog.add(scrollPane);
-
-            JButton closeButton = new JButton("Закрыть");
-            closeButton.addActionListener(e -> dialog.dispose());
-
-            JPanel buttonPanel = new JPanel();
-            buttonPanel.add(closeButton);
-
-            dialog.add(buttonPanel, BorderLayout.SOUTH);
-            dialog.setVisible(true);
+            String message = "В этой поставке нет компонентов.";
+            popupTable(data, columnNames, message, dialog);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(mainFrame, "Ошибка при загрузке данных: " + e.getMessage(),
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            messageError(mainFrame, "Ошибка при загрузке данных: " + e.getMessage());
         }
     }
 
     public void showAddComponentDialog() {
-        int selectedRow = supplyTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(mainFrame, "Пожалуйста, выберите поставку.",
-                    "Ошибка", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        int supplyId = super.selectRow(table);
+        if (supplyId == -1) return;
 
-        int supplyId = (Integer) supplyTable.getValueAt(selectedRow, 0);
-        showAddComponentToExistingSupplyDialog(supplyId);
-    }
-
-    public void showAddComponentToExistingSupplyDialog(int supplyId) {
         JDialog dialog = new JDialog(mainFrame, "Добавление компонента в поставку #" + supplyId, true);
         dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(mainFrame);
@@ -195,58 +143,26 @@ public class SupplyView extends View{
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Выбор типа компонента
         panel.add(new JLabel("Тип компонента:"));
         JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Древесина", "Сердцевина"});
         panel.add(typeComboBox);
 
-        // Выбор компонента
         panel.add(new JLabel("Компонент:"));
         JComboBox<String> componentComboBox = new JComboBox<>();
         panel.add(componentComboBox);
 
-        // Обновление списка компонентов при изменении типа
         typeComboBox.addActionListener(e -> {
-            String type = typeComboBox.getSelectedItem().equals("Древесина") ? "wood" : "core";
-            mainFrame.loadComponents(componentComboBox, type);
+            String type = Objects.equals(typeComboBox.getSelectedItem(), "Древесина") ? "wood" : "core";
+            loadComponents(componentComboBox, type);
         });
 
-        // Инициализация списка компонентов
-        mainFrame.loadComponents(componentComboBox, "wood");
+        loadComponents(componentComboBox, "wood");
 
-        // Количество
         panel.add(new JLabel("Количество:"));
-        JTextField quantityField = new JTextField();
+        JFormattedTextField quantityField = new JFormattedTextField(NumberFormat.getNumberInstance());
         panel.add(quantityField);
 
-        // Кнопки
-        JButton addButton = new JButton("Добавить");
-        addButton.addActionListener(e -> {
-            try {
-                int componentId = Integer.parseInt(componentComboBox.getSelectedItem().toString().split(" - ")[0]);
-                int quantity = Integer.parseInt(quantityField.getText());
-
-                if (quantity <= 0) {
-                    JOptionPane.showMessageDialog(dialog, "Количество должно быть положительным числом.",
-                            "Ошибка", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                controller.createComponents(supplyId, componentId, quantity);
-                controller.increaseComponents(componentId, quantity);
-
-                JOptionPane.showMessageDialog(dialog, "Компонент успешно добавлен в поставку!",
-                        "Успех", JOptionPane.INFORMATION_MESSAGE);
-                dialog.dispose();
-
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Пожалуйста, введите корректное количество.",
-                        "Ошибка", JOptionPane.ERROR_MESSAGE);
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Ошибка при добавлении компонента: " + ex.getMessage(),
-                        "Ошибка", JOptionPane.ERROR_MESSAGE);
-            }
-        });
+        JButton addButton = addButtonComponent(dialog, componentComboBox, quantityField, supplyId);
 
         JButton cancelButton = new JButton("Отмена");
         cancelButton.addActionListener(e -> dialog.dispose());
@@ -258,5 +174,31 @@ public class SupplyView extends View{
         dialog.add(panel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
+    }
+
+    public JButton addButtonComponent(JDialog dialog, JComboBox<String> componentComboBox, JFormattedTextField quantityField, int supplyId) {
+        JButton addButton = new JButton("Добавить");
+        addButton.addActionListener(e -> {
+            try {
+                int componentId = Integer.parseInt(Objects.requireNonNull(componentComboBox.getSelectedItem()).toString().split(" - ")[0]);
+                int quantity = Integer.parseInt(quantityField.getText());
+
+                if (quantity <= 0) {
+                    messageError(dialog, "Количество должно быть положительным числом.");
+                }
+
+                controller.createComponents(supplyId, componentId, quantity);
+                controller.increaseComponents(componentId, quantity);
+
+                messageSuccess(dialog, "Компонент успешно добавлен в поставку!");
+                dialog.dispose();
+
+            } catch (NumberFormatException ex) {
+                messageError(dialog, "Пожалуйста, введите корректное количество.");
+            } catch (SQLException ex) {
+                messageError(dialog, "Ошибка при добавлении компонента: " + ex.getMessage());
+            }
+        });
+        return addButton;
     }
 }

@@ -10,8 +10,7 @@ import java.util.Vector;
 public class ComponentDB {
     public Vector<Vector<Object>> getAll() throws SQLException {
         Vector<Vector<Object>> data = new Vector<>();
-        String sql = "SELECT component_id, name, type, quantity " +
-                "FROM components ORDER BY type, name";
+        String sql = "SELECT component_id, name, type, quantity FROM components";
 
         ResultSet result;
         try (Statement statement = DatabaseConnector.getConnection().createStatement()) {
@@ -29,15 +28,13 @@ public class ComponentDB {
         return data;
     }
 
-    public void decrease(int componentId, int quantity) throws SQLException {
+    public void decrease(int componentId) throws SQLException {
         String sql = "UPDATE components SET quantity = quantity - ? WHERE component_id = ?";
         PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql);
-        statement.setInt(1, quantity);
+        statement.setInt(1, 1);
         statement.setInt(2, componentId);
         statement.executeUpdate();
         statement.close();
-
-//        refreshInventoryTable();
     }
 
     public void increase(int componentId, int quantity) throws SQLException {
@@ -47,13 +44,11 @@ public class ComponentDB {
         statement.setInt(2, componentId);
         statement.executeUpdate();
         statement.close();
-
-//        refreshInventoryTable();
     }
 
     public ArrayList<String> get(String type) throws SQLException {
         ArrayList<String> data = new ArrayList<>();
-        String sql = "SELECT component_id, name FROM components WHERE type = ? ORDER BY name";
+        String sql = "SELECT component_id, name FROM components WHERE type = ? ORDER BY compon";
         ResultSet result;
         try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
             statement.setString(1, type);

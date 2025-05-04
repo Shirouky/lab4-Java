@@ -1,4 +1,6 @@
-package database;
+package main;
+
+import database.*;
 
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -22,8 +24,8 @@ public class Controller {
         return wandController.getAll();
     }
 
-    public void saleWand(int wandId, int customerId) throws SQLException {
-        wandController.sale(wandId, customerId);
+    public void sellWand(int wandId, int customerId) throws SQLException {
+        wandController.sell(wandId, customerId);
     }
 
     public void createWand(int woodId, int coreId, double length, String flexibility, double price) throws SQLException {
@@ -32,10 +34,6 @@ public class Controller {
 
     public ArrayList<String> getComponents(String type) throws SQLException {
         return componentController.get(type);
-    }
-
-    public void decreaseComponent(int componentId, int quantity) throws SQLException {
-        componentController.decrease(componentId, quantity);
     }
 
     public void increaseComponents(int componentId, int quantity) throws SQLException {

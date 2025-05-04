@@ -1,11 +1,10 @@
 package gui;
 
-import database.Controller;
+import main.Controller;
 
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class MainView extends JFrame {
     private final JFrame mainFrame;
@@ -27,15 +26,10 @@ public class MainView extends JFrame {
         cardPanel = new JPanel(cardLayout);
 
         createPanel();
-        wandView = new WandView(this, cardLayout, cardPanel);
         customerView = new CustomerView(this, cardLayout, cardPanel);
         supplyView = new SupplyView(this, cardLayout, cardPanel);
         componentView = new ComponentView(this, cardLayout, cardPanel);
-
-        wandView.createPanel();
-        customerView.createPanel();
-        supplyView.createPanel();
-        componentView.createPanel();
+        wandView = new WandView(this, cardLayout, cardPanel, customerView.getTable());
 
         controller = new Controller();
 
@@ -57,31 +51,31 @@ public class MainView extends JFrame {
 
         JButton wandsButton = new JButton("Управление палочками");
         wandsButton.addActionListener(e -> {
-            wandView.refreshTable();
+            wandView.createPanel();
             cardLayout.show(cardPanel, "WandManagement");
         });
         buttonPanel.add(wandsButton);
 
         JButton customersButton = new JButton("Управление покупателями");
         customersButton.addActionListener(e -> {
-            customerView.refreshTable();
+            customerView.createPanel();
             cardLayout.show(cardPanel, "CustomerManagement");
         });
         buttonPanel.add(customersButton);
 
         JButton suppliesButton = new JButton("Управление поставками");
         suppliesButton.addActionListener(e -> {
-            supplyView.refreshTable();
+            supplyView.createPanel();
             cardLayout.show(cardPanel, "SupplyManagement");
         });
         buttonPanel.add(suppliesButton);
 
-        JButton inventoryButton = new JButton("Просмотр состояния склада");
-        inventoryButton.addActionListener(e -> {
-            componentView.refreshTable();
+        JButton componentButton = new JButton("Просмотр состояния склада");
+        componentButton.addActionListener(e -> {
+            componentView.createPanel();
             cardLayout.show(cardPanel, "Inventory");
         });
-        buttonPanel.add(inventoryButton);
+        buttonPanel.add(componentButton);
 
         JButton clearDataButton = new JButton("Очистить все данные");
         clearDataButton.addActionListener(e -> clearAll());
@@ -100,19 +94,6 @@ public class MainView extends JFrame {
                     "Успех", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(mainFrame, "Ошибка при очистке данных: " + e.getMessage(),
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public void loadComponents(JComboBox<String> comboBox, String type) {
-        comboBox.removeAllItems();
-        try {
-            ArrayList<String> result = controller.getComponents(type);
-            for (String res : result) {
-                comboBox.addItem(res);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(mainFrame, "Ошибка при загрузке компонентов: " + e.getMessage(),
                     "Ошибка", JOptionPane.ERROR_MESSAGE);
         }
     }

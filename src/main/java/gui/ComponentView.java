@@ -1,72 +1,43 @@
 package gui;
 
-import database.Controller;
-
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.Vector;
 
-public class ComponentView extends JFrame{
-    private MainView mainFrame;
-    private final CardLayout cardLayout;
-    private final JPanel cardPanel;
-    private final Controller controller;
-    private JTable inventoryTable;
-
+public class ComponentView extends View implements ViewInterface{
     public ComponentView(MainView mainFrame, CardLayout cardLayout, JPanel cardPanel) {
-        this.mainFrame = mainFrame;
-        setTitle("Управление компонентами");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        super(mainFrame, cardLayout, cardPanel);
 
-        controller = new Controller();
-        this.cardPanel = cardPanel;
-        this.cardLayout = cardLayout;
-        this.mainFrame = mainFrame;
+        columnNames.add("ID");
+        columnNames.add("Название");
+        columnNames.add("Тип");
+        columnNames.add("Количество");
     }
 
+    @Override
     public void createPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        JLabel titleLabel = new JLabel("Состояние склада", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 20));
-        panel.add(titleLabel, BorderLayout.NORTH);
-
-        inventoryTable = new JTable();
+        createPanel("Состояние склада", createButtonPanel(), "Inventory");
         refreshTable();
-        JScrollPane scrollPane = new JScrollPane(inventoryTable);
-        panel.add(scrollPane, BorderLayout.CENTER);
+    }
 
+    @Override
+    public JPanel createButtonPanel() {
         JButton backButton = new JButton("Назад");
         backButton.addActionListener(e -> cardLayout.show(cardPanel, "MainMenu"));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.add(backButton);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        cardPanel.add(panel, "Inventory");
+        return buttonPanel;
     }
 
+    @Override
     public void refreshTable() {
         try {
-            Vector<String> columnNames = new Vector<>();
-            columnNames.add("ID");
-            columnNames.add("Название");
-            columnNames.add("Тип");
-            columnNames.add("Количество");
-
             Vector<Vector<Object>> data = controller.getAllComponents();
-            inventoryTable.setModel(new javax.swing.table.DefaultTableModel(data, columnNames) {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            });
+            refreshTable(data, columnNames, table);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(mainFrame, "Ошибка при загрузке данных: " + e.getMessage(),
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            messageError(mainFrame, "Ошибка при загрузке данных: " + e.getMessage());
         }
     }
 }

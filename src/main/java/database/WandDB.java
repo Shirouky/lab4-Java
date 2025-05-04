@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 import java.util.Vector;
 
 public class WandDB {
@@ -69,14 +70,34 @@ public class WandDB {
         return data;
     }
 
-    public void sale(int wandId, int customerId) throws SQLException {
-        String sql = "UPDATE wands SET status = 'sold', customer_id = ?, sale_date = CURDATE() WHERE wand_id = ?";
-        PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql);
-        statement.setInt(1, customerId);
-        statement.setInt(2, wandId);
+    private boolean check(int wandId) throws SQLException {
+        String sql = "SELECT status FROM wands WHERE wand_id = ?";
+        ResultSet result;
+        try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
+            statement.setInt(1, wandId);
+            result = statement.executeQuery();
 
-        statement.executeUpdate();
-        statement.close();
+            if (result.next()) {
+                if (Objects.equals(result.getString("status"), "available")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void sell(int wandId, int customerId) throws SQLException {
+        if (check(wandId)) {
+            String sql = "UPDATE wands SET status = 'sold', customer_id = ?, sale_date = CURDATE() WHERE wand_id = ?";
+            try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
+                statement.setInt(1, customerId);
+                statement.setInt(2, wandId);
+
+                statement.executeUpdate();
+            }
+        } else {
+            throw new SQLException("эта палочка уже продана!");
+        }
     }
 
     public void create(int woodId, int coreId, double length, String flexibility, double price) throws SQLException {
@@ -95,8 +116,8 @@ public class WandDB {
                 statement.executeUpdate();
             }
 
-            componentController.decrease(woodId, 1);
-            componentController.decrease(coreId, 1);
+            componentController.decrease(woodId);
+            componentController.decrease(coreId);
         } else {
             throw new SQLException("недостаточно компонентов для создания палочки");
         }
