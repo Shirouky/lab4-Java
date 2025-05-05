@@ -23,7 +23,7 @@ public class WandView extends View implements ViewInterface {
         columnNames.add("Статус");
         columnNames.add("Покупатель");
         columnNames.add("Дата продажи");
-        
+
         this.customerTable = customerTable;
     }
 
@@ -106,12 +106,13 @@ public class WandView extends View implements ViewInterface {
     public JButton addButton(JDialog dialog, JFormattedTextField lengthField, JTextField flexibilityField, JFormattedTextField priceField) {
         JButton addButton = new JButton("Добавить");
         addButton.addActionListener(e -> {
-            int woodId = Integer.parseInt(Objects.requireNonNull(woodComboBox.getSelectedItem()).toString().split(" - ")[0]);
-            int coreId = Integer.parseInt(Objects.requireNonNull(coreComboBox.getSelectedItem()).toString().split(" - ")[0]);
-            double length = Double.parseDouble(lengthField.getText());
-            String flexibility = flexibilityField.getText();
-            double price = Double.parseDouble(priceField.getText());
             try {
+                int woodId = Integer.parseInt(Objects.requireNonNull(woodComboBox.getSelectedItem()).toString().split(" - ")[0]);
+                int coreId = Integer.parseInt(Objects.requireNonNull(coreComboBox.getSelectedItem()).toString().split(" - ")[0]);
+                double length = Double.parseDouble(lengthField.getText());
+                String flexibility = flexibilityField.getText();
+                double price = Double.parseDouble(priceField.getText());
+
                 controller.createWand(woodId, coreId, length, flexibility, price);
                 messageSuccess(dialog, "Новая палочка успешно добавлена!");
 
@@ -119,6 +120,8 @@ public class WandView extends View implements ViewInterface {
                 dialog.dispose();
             } catch (SQLException ex) {
                 messageError(dialog, "Ошибка при добавлении палочки: " + ex.getMessage());
+            } catch (NumberFormatException ex) {
+                messageError(dialog, "Пожалуйста, введите корректное количество.");
             }
         });
         return addButton;
