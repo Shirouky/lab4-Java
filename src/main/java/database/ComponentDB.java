@@ -28,27 +28,9 @@ public class ComponentDB {
         return data;
     }
 
-    public void decrease(int componentId) throws SQLException {
-        String sql = "UPDATE components SET quantity = quantity - ? WHERE component_id = ?";
-        PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql);
-        statement.setInt(1, 1);
-        statement.setInt(2, componentId);
-        statement.executeUpdate();
-        statement.close();
-    }
-
-    public void increase(int componentId, int quantity) throws SQLException {
-        String sql = "UPDATE components SET quantity = quantity + ? WHERE component_id = ?";
-        PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql);
-        statement.setInt(1, quantity);
-        statement.setInt(2, componentId);
-        statement.executeUpdate();
-        statement.close();
-    }
-
     public ArrayList<String> get(String type) throws SQLException {
         ArrayList<String> data = new ArrayList<>();
-        String sql = "SELECT component_id, name FROM components WHERE type = ? ORDER BY compon";
+        String sql = "SELECT component_id, name FROM components WHERE type = ?";
         ResultSet result;
         try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
             statement.setString(1, type);
@@ -59,33 +41,6 @@ public class ComponentDB {
             }
         }
         return data;
-    }
-
-    public void create(int supplyId, int componentId, int quantity) throws SQLException {
-        String sql = "INSERT INTO supply_components (supply_id, component_id, quantity) VALUES (?, ?, ?)";
-        try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
-            statement.setInt(1, supplyId);
-            statement.setInt(2, componentId);
-            statement.setInt(3, quantity);
-
-            statement.executeUpdate();
-        }
-    }
-
-    public boolean check(int componentId) throws SQLException {
-        String sql = "SELECT quantity FROM components WHERE component_id = ?";
-        ResultSet result;
-        try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
-            statement.setInt(1, componentId);
-            result = statement.executeQuery();
-
-            if (result.next()) {
-                if (result.getInt("quantity") > 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     public Vector<Vector<Object>> getComponentsSupply(int supplyId) throws SQLException {
@@ -110,5 +65,51 @@ public class ComponentDB {
             }
         }
         return data;
+    }
+
+    public void decrease(int componentId) throws SQLException {
+        String sql = "UPDATE components SET quantity = quantity - ? WHERE component_id = ?";
+        PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql);
+        statement.setInt(1, 1);
+        statement.setInt(2, componentId);
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public void increase(int componentId, int quantity) throws SQLException {
+        String sql = "UPDATE components SET quantity = quantity + ? WHERE component_id = ?";
+        PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql);
+        statement.setInt(1, quantity);
+        statement.setInt(2, componentId);
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    public boolean check(int componentId) throws SQLException {
+        String sql = "SELECT quantity FROM components WHERE component_id = ?";
+        ResultSet result;
+        try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
+            statement.setInt(1, componentId);
+            result = statement.executeQuery();
+
+            if (result.next()) {
+                if (result.getInt("quantity") > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void create(int supplyId, int componentId, int quantity) throws SQLException {
+        String sql = "INSERT INTO supply_components (supply_id, component_id, quantity) VALUES (?, ?, ?)";
+        try (PreparedStatement statement = DatabaseConnector.getConnection().prepareStatement(sql)) {
+            statement.setInt(1, supplyId);
+            statement.setInt(2, componentId);
+            statement.setInt(3, quantity);
+
+            statement.executeUpdate();
+        }
+        increase(componentId, quantity);
     }
 }

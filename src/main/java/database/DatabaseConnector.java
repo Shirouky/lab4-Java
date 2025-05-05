@@ -63,7 +63,6 @@ public class DatabaseConnector {
             JOptionPane.showMessageDialog(null,
                     "Ошибка инициализации БД: " + e.getMessage(),
                     "Ошибка", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 

@@ -188,7 +188,6 @@ public class SupplyView extends View implements ViewInterface{
                 }
 
                 controller.createComponents(supplyId, componentId, quantity);
-                controller.increaseComponents(componentId, quantity);
 
                 messageSuccess(dialog, "Компонент успешно добавлен в поставку!");
                 dialog.dispose();

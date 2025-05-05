@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.Vector;
 
 public class WandView extends View implements ViewInterface {
-    public JComboBox<String> woodComboBox, coreComboBox;
-    private JTable customerTable;
+    private JComboBox<String> woodComboBox, coreComboBox;
+    private final JTable customerTable;
 
     public WandView(MainView mainFrame, CardLayout cardLayout, JPanel cardPanel, JTable customerTable) {
         super(mainFrame, cardLayout, cardPanel);
