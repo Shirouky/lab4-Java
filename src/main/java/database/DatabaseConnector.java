@@ -130,15 +130,11 @@ public class DatabaseConnector {
 
     public static void clearAll() throws SQLException {
         try (Statement statement = DatabaseConnector.getConnection().createStatement()) {
-            statement.execute("SET FOREIGN_KEY_CHECKS = 0");
-
-            statement.execute("TRUNCATE TABLE wands");
-            statement.execute("TRUNCATE TABLE customers");
-            statement.execute("TRUNCATE TABLE supply_components");
-            statement.execute("TRUNCATE TABLE supplies");
-            statement.execute("TRUNCATE TABLE components");
-
-            statement.execute("SET FOREIGN_KEY_CHECKS = 1");
+            statement.execute("DELETE FROM wands");
+            statement.execute("DELETE FROM supplies");
+            statement.execute("DELETE FROM customers");
+            statement.execute("DELETE FROM components");
+            statement.execute("DELETE FROM supply_components");
         }
     }
 }
