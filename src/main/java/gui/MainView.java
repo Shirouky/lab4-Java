@@ -40,6 +40,10 @@ public class MainView extends JFrame {
     }
 
     private void createPanel() {
+        Color accentColor = Color.BLUE;
+        UIManager.put("Button.background", accentColor);
+        UIManager.put("Button.foreground", Color.WHITE);
+
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
@@ -47,7 +51,14 @@ public class MainView extends JFrame {
         titleLabel.setFont(new Font("Serif", Font.BOLD, 24));
         panel.add(titleLabel, BorderLayout.NORTH);
 
-        JPanel buttonPanel = new JPanel(new GridLayout(5, 1, 10, 10));
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 2, 20, 10));
+
+        JButton suppliesButton = new JButton("Управление поставками");
+        suppliesButton.addActionListener(e -> {
+            supplyView.createPanel();
+            cardLayout.show(cardPanel, "SupplyManagement");
+        });
+        buttonPanel.add(suppliesButton);
 
         JButton wandsButton = new JButton("Управление палочками");
         wandsButton.addActionListener(e -> {
@@ -62,13 +73,6 @@ public class MainView extends JFrame {
             cardLayout.show(cardPanel, "CustomerManagement");
         });
         buttonPanel.add(customersButton);
-
-        JButton suppliesButton = new JButton("Управление поставками");
-        suppliesButton.addActionListener(e -> {
-            supplyView.createPanel();
-            cardLayout.show(cardPanel, "SupplyManagement");
-        });
-        buttonPanel.add(suppliesButton);
 
         JButton componentButton = new JButton("Просмотр состояния склада");
         componentButton.addActionListener(e -> {
